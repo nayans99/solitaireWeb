@@ -17,7 +17,7 @@ Preview: a small preview image is included under `assets/` (see `assets/preview.
 
 ## Run locally (recommended)
 
-Open a terminal in the project folder (`c:\Users\himan\Documents\Projects\solitaire\web`) and run:
+Open a terminal in the project folder and run:
 
 ```powershell
 python -m http.server 8000
