@@ -69,21 +69,12 @@ function attachHandlers(){
 	// foundation click handlers: allow dropping selected card to empty foundation
 	const foundationNodes = document.querySelectorAll('#foundations .foundation')
 	foundationNodes.forEach((node, i) => {
-		node.onclick = (e) => {
-			e.stopPropagation()
-			if (selected) {
-				tryMoveToFoundation(i)
-				clearSelection()
-				render()
-			}
-		}
+		node.onclick = (e) => { e.stopPropagation(); if (selected) tryMoveToFoundation(i) }
 	})
 
-	console.log('Handlers attached: stock=', !!stockEl, 'newGame=', !!newGameBtn, 'foundations=', foundationNodes.length)
 }
 
 function onStockClick(){
-	const stockEl = document.getElementById('stock')
 	if (deck.length > 0){
 		let c = deck.pop()
 		c.faceUp = true
@@ -97,7 +88,8 @@ function onStockClick(){
 		}
 	}
 	clearSelection()
-	render()
+	renderStock()
+	renderWaste()
 }
 
 function render(){
@@ -153,27 +145,54 @@ function renderFoundations(){
 	})
 }
 
+function ensureTableauColumns(){
+	const container = document.getElementById('tableau')
+	if (!container) return
+	// create missing columns if container is empty or incomplete
+	while (container.children.length < 7){
+		const idx = container.children.length
+		const colDiv = document.createElement('div')
+		colDiv.className = 'column'
+		colDiv.onclick = (e) => { if (selected) tryMoveToTableau(idx) }
+		container.appendChild(colDiv)
+	}
+	// ensure correct click handlers (fix indices)
+	for (let i = 0; i < 7; i++){
+		const node = container.children[i]
+		if (node) node.onclick = (e) => { if (selected) tryMoveToTableau(i) }
+	}
+}
+
+function renderTableauColumn(colIndex){
+	const container = document.getElementById('tableau')
+	if (!container) return
+	ensureTableauColumns()
+	const colDiv = container.children[colIndex]
+	if (!colDiv) return
+	colDiv.innerHTML = ''
+	const column = tableau[colIndex]
+	column.forEach((card, i) => {
+		const cardEl = createCardElement(card, { pile:'tableau', col:colIndex, index:i })
+		cardEl.style.top = (i * 28) + 'px'
+		cardEl.style.zIndex = i
+		cardEl.style.opacity = '0'
+		colDiv.appendChild(cardEl)
+	})
+	// reveal all new cards in a single rAF to avoid many paints
+	requestAnimationFrame(() => {
+		for (let k = 0; k < colDiv.children.length; k++){
+			const el = colDiv.children[k]
+			el.style.transition = 'opacity 180ms ease'
+			el.style.opacity = '1'
+		}
+	})
+}
+
 function renderTableau(){
 	const container = document.getElementById('tableau')
-	// build with fragment to reduce reflow and fade-in new cards
-	const frag = document.createDocumentFragment()
-	tableau.forEach((column, colIndex) => {
-		let colDiv = document.createElement('div')
-		colDiv.className = 'column'
-		column.forEach((card, i) => {
-			let cardEl = createCardElement(card, { pile:'tableau', col:colIndex, index:i })
-			cardEl.style.top = (i * 28) + 'px'
-			cardEl.style.zIndex = i
-			cardEl.style.opacity = '0'
-			colDiv.appendChild(cardEl)
-			// reveal after appended
-			requestAnimationFrame(() => { cardEl.style.transition = 'opacity 180ms ease'; cardEl.style.opacity = '1' })
-		})
-		colDiv.onclick = (e) => { if (selected) tryMoveToTableau(colIndex) }
-		frag.appendChild(colDiv)
-	})
-	container.innerHTML = ''
-	container.appendChild(frag)
+	if (!container) return
+	ensureTableauColumns()
+	for (let i = 0; i < 7; i++) renderTableauColumn(i)
 }
 
 function createCardElement(card, info = {}){
@@ -210,7 +229,7 @@ function onCardClick(card, info, el){
 		const col = tableau[info.col]
 		if (info.index === col.length - 1){
 			card.faceUp = true
-			render()
+			renderTableauColumn(info.col)
 		}
 		return
 	}
@@ -249,8 +268,9 @@ function clearSelection(){
 function tryMoveToTableau(destCol){
 	if (!selected) return
 	const from = selected.info.pile
+	let srcCol = null
+	if (from === 'tableau') srcCol = selected.info.col
 	if (from === 'tableau'){
-		const srcCol = selected.info.col
 		const srcIndex = selected.info.index
 		const movingStack = tableau[srcCol].slice(srcIndex)
 		const movingCard = movingStack[0]
@@ -279,7 +299,14 @@ function tryMoveToTableau(destCol){
 		}
 	}
 	clearSelection()
-	render()
+	// Render only affected piles
+	// Always refresh destination column
+	renderTableauColumn(destCol)
+	// If move came from tableau, refresh source column
+	if (from === 'tableau' && srcCol !== null) renderTableauColumn(srcCol)
+	// If move involved waste or foundations, refresh those
+	if (from === 'waste') renderWaste()
+	if (from === 'foundation') renderFoundations()
 }
 
 function tryMoveToFoundation(fIdx){
@@ -300,6 +327,11 @@ function tryMoveToFoundation(fIdx){
 		}
 		foundations[fIdx].push(movingCard)
 		postMoveCleanup(srcCol)
+		// render changes for tableau->foundation
+		clearSelection()
+		renderFoundations()
+		renderTableauColumn(srcCol)
+		return
 	} else if (from === 'waste'){
 		movingCard = waste.pop()
 		if (!canPlaceOnFoundation(movingCard, fIdx)){
@@ -308,13 +340,15 @@ function tryMoveToFoundation(fIdx){
 			return
 		}
 		foundations[fIdx].push(movingCard)
+		// render changes for waste->foundation
+		clearSelection()
+		renderFoundations()
+		renderWaste()
+		return
 	} else if (from === 'foundation'){
 		clearSelection();
 		return
 	}
-
-	clearSelection()
-	render()
 }
 
 function postMoveCleanup(srcCol){

@@ -2,7 +2,8 @@
 
 A minimal, static Klondike (solitaire) implementation using plain HTML, CSS and JavaScript.
 
-Preview: a small preview image is included under `assets/` (see `assets/preview.png` if present).
+![Preview](assets/WebViewPreview.png)
+<sub>If the image doesn't display in your viewer, check `assets/` for `WebViewPreview.png`.</sub>
 
 ## Features
 
