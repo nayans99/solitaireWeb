@@ -9,6 +9,26 @@ let tableau = [[], [], [], [], [], [], []]
 let foundations = [[], [], [], []]
 let waste = []
 let selected = null
+// cache resolved image srcs to avoid repeated failed loads and flashes
+const imageCache = {}
+let backImageSrc = null
+
+function resolveBackImage(cb){
+	if (backImageSrc) return cb(backImageSrc)
+	const probe = new Image()
+	probe.onload = () => { backImageSrc = 'assets/cards/back.png'; cb(backImageSrc) }
+	probe.onerror = () => { backImageSrc = 'assets/cards/back.svg'; cb(backImageSrc) }
+	probe.src = 'assets/cards/back.png'
+}
+
+function resolveCandidates(candidates, cb){
+	if (!candidates || candidates.length === 0) return cb(null)
+	const next = candidates.shift()
+	const probe = new Image()
+	probe.onload = () => cb(next)
+	probe.onerror = () => resolveCandidates(candidates, cb)
+	probe.src = next
+}
 
 // Initialize once DOM is ready so direct-file opens work reliably
 window.addEventListener('DOMContentLoaded', () => {
@@ -105,16 +125,21 @@ function renderStock(){
 	stock.innerHTML = ''
 	if (deck.length > 0){
 		let img = document.createElement('img')
-		img.src = 'assets/cards/back.png'
+		// tiny transparent placeholder to avoid showing broken icon
+		img.src = 'data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs='
 		img.className = 'card'
 		img.draggable = false
+		img.style.visibility = 'hidden'
 		// prevent default navigation when clicking image files in some browsers
 		img.addEventListener('click', (e) => { e.preventDefault(); e.stopPropagation(); onStockClick(); })
-		// fallback to SVG if PNG is not present
-		img.onerror = () => { img.onerror = null; img.src = 'assets/cards/back.svg' }
-		img.style.opacity = '0'
 		stock.appendChild(img)
-		requestAnimationFrame(() => { img.style.transition = 'opacity 160ms ease'; img.style.opacity = '1' })
+		// resolve real back image and swap in when available
+		resolveBackImage((src) => {
+			img.onload = () => { img.style.visibility = 'visible'; img.style.transition = 'opacity 160ms ease'; img.style.opacity = '1' }
+			img.onerror = null
+			img.style.opacity = '0'
+			img.src = src
+		})
 	}
 }
 
@@ -198,18 +223,28 @@ function renderTableau(){
 function createCardElement(card, info = {}){
 	let img = document.createElement('img')
 	img.className = 'card'
+	// Use a tiny placeholder first to avoid showing broken-image icon while we resolve
+	img.src = 'data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs='
+	img.style.visibility = 'hidden'
 	if (card.faceUp){
-		// Try multiple filename variants because asset filenames may use words ("Two")
-		const candidates = filenameCandidates(card.value, card.suit)
-		img.src = candidates.shift()
-		img.onerror = () => {
-			img.onerror = null
-			tryNextCandidate(img, candidates)
+		const key = `${card.value}|${card.suit}`
+		if (imageCache[key]){
+			img.onload = () => { img.style.visibility = 'visible'; img.style.transition = 'opacity 160ms ease'; img.style.opacity = '1' }
+			img.src = imageCache[key]
+		} else {
+			const candidates = filenameCandidates(card.value, card.suit)
+			resolveCandidates(candidates.slice(), (src) => {
+				const chosen = src || 'assets/cards/back.png'
+				imageCache[key] = chosen
+				img.onload = () => { img.style.visibility = 'visible'; img.style.transition = 'opacity 160ms ease'; img.style.opacity = '1' }
+				img.src = chosen
+			})
 		}
 	} else {
-		img.src = 'assets/cards/back.png'
-		// fallback to SVG back if PNG missing
-		img.onerror = () => { img.onerror = null; img.src = 'assets/cards/back.svg' }
+		resolveBackImage((src) => {
+			img.onload = () => { img.style.visibility = 'visible'; img.style.transition = 'opacity 160ms ease'; img.style.opacity = '1' }
+			img.src = src
+		})
 	}
 	// store info
 	if (info.pile) img.dataset.pile = info.pile

@@ -5,6 +5,8 @@ A minimal, static Klondike (solitaire) implementation using plain HTML, CSS and 
 ![Preview](assets/WebViewPreview.png)
 <sub>If the image doesn't display in your viewer, check `assets/` for `WebViewPreview.png`.</sub>
 
+Live demo: https://nayans99.github.io/solitaireWeb/
+
 ## Features
 
 - Classic Klondike rules (click-to-move)

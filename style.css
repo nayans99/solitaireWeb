@@ -1,320 +1,122 @@
-body {
-	background: #eef2f3;
-	font-family: Inter, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
-	margin: 0;
-	padding: 28px;
-	color: #1f2933;
-	display: flex;
-	flex-direction: column;
-	align-items: center;
-	justify-content: center;
-	min-height: 100vh;
-	box-sizing: border-box;
+/* Clean responsive styles for the Solitaire board */
+:root{
+  --card-w: 80px;
+  --card-h: 120px;
+  --col-gap: 12px;
+  --top-row-gap: 18px;
+  --board-padding: 28px;
 }
 
-.title {
-	text-align: center;
-	margin-bottom: 18px;
-	font-weight: 700;
-	color: #114b33;
+*{box-sizing: border-box}
+
+body{
+  margin:0;
+  padding:28px;
+  min-height:100vh;
+  background:#eef2f3;
+  font-family: Inter, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
+  color:#1f2933;
+  display:flex;
+  align-items:center;
+  justify-content:center;
 }
 
-#board {
-	width: min(1400px, 96vw);
-	max-width: 1400px;
-	height: min(82vh, 820px);
-	margin: 0 auto;
-	background: linear-gradient(180deg, #304444 0%, #263839 100%);
-	padding: 28px 32px;
-	border-radius: 12px;
-	box-shadow: 0 18px 40px rgba(16,40,34,0.14);
-	box-sizing: border-box;
+.title{ text-align:center; margin-bottom:12px; font-weight:700; color:#114b33 }
+/* When the title is inside the dark board, make it light for contrast */
+#board .title { color: rgba(255,255,255,0.92); margin-bottom:18px }
+
+#board{
+  width: min(1400px, 96vw);
+  max-width:1400px;
+  height: min(82vh, 820px);
+  background: linear-gradient(180deg,#304444 0%,#263839 100%);
+  padding:var(--board-padding);
+  border-radius:12px;
+  box-shadow:0 18px 40px rgba(16,40,34,0.14);
 }
 
-.controls {
-	display: flex;
-	align-items: center;
-	gap: 12px;
-	margin-bottom: 12px;
+.controls{ display:flex; align-items:center; gap:12px; margin-bottom:12px }
+.controls button{ background:#fff; color:#114b33; border:1px solid rgba(0,0,0,0.06); padding:6px 12px; border-radius:6px; cursor:pointer; font-weight:600 }
+.controls .hint{ font-size:12px; color:rgba(255,255,255,0.9) }
+.spacer{ flex:1 1 0% }
+
+.top-row{ display:flex; gap:var(--top-row-gap); margin-bottom:20px; align-items:flex-start; justify-content:space-between }
+#foundations{ display:flex; gap:14px }
+
+/* Tableau: allow horizontal scroll on narrow viewports */
+/* Tableau is horizontally scrollable on narrow viewports; prevent vertical scroll */
+#tableau{
+  display:flex;
+  gap:var(--col-gap);
+  width:100%;
+  justify-content:center;
+  margin-top:8px;
 }
 
-.controls button {
-	background: #ffffff;
-	color: #114b33;
-	border: 1px solid rgba(0,0,0,0.06);
-	padding: 6px 12px;
-	border-radius: 6px;
-	cursor: pointer;
-	font-weight: 600;
+.pile, .foundation, #stock, #waste{
+  width:var(--card-w);
+  height:var(--card-h);
+  border-radius:8px;
+  background:rgba(255,255,255,0.03);
+  border:1px solid rgba(255,255,255,0.04);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.02);
+  display:flex;
+  align-items:flex-start;
+  justify-content:center;
 }
 
-.controls .hint {
-	font-size: 12px;
-	color: rgba(255,255,255,0.9);
+.column{
+  position:relative;
+  width:var(--card-w);
+  min-height:220px;
+  border-radius:8px;
 }
 
-.spacer { flex: 1 1 0%; }
-
-.top-row {
-	display: flex;
-	gap: 18px;
-	margin-bottom: 26px;
-	align-items: flex-start;
-	justify-content: space-between;
+.card{
+  width:var(--card-w);
+  height:var(--card-h);
+  position:absolute;
+  cursor:pointer;
+  user-select:none;
+  border-radius:8px;
+  box-shadow:0 10px 24px rgba(2,6,23,0.35);
+  transition: transform 150ms ease, box-shadow 150ms ease, opacity 160ms ease;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
 }
 
-#foundations {
-	display: flex;
-	gap: 14px;
+.card.selected{ transform: translateY(-6px) scale(1.02); box-shadow:0 16px 36px rgba(2,6,23,0.45) }
+
+.foundation, #stock, #waste{ display:flex; align-items:flex-start; justify-content:center }
+
+.message{ position:fixed; left:50%; top:20px; transform:translateX(-50%); background:#114b33; color:white; padding:10px 16px; border-radius:8px; font-weight:700; z-index:9999 }
+.hidden{ display:none }
+
+/* Small screens: increase touch targets, reduce padding and card size */
+@media (max-width: 700px){
+  :root{ --card-w: 64px; --card-h: 96px; --col-gap:10px; --board-padding:16px }
+  body{ padding:12px }
+  #board{ padding:16px; height: auto; }
+  .controls button{ padding:8px 14px }
+  .title{ font-size:18px }
+  .column{ min-height:200px }
 }
 
-#tableau {
-	display: flex;
-	gap: 12px;
-	width: 100%;
-	justify-content: center; /* center the 7 columns */
-	margin-top: 8px;
+/* Very small screens / phones */
+@media (max-width: 420px){
+  :root{ --card-w: 56px; --card-h: 84px; --col-gap:8px; --board-padding:12px }
+  #board{ padding:12px }
+  .controls{ gap:8px; flex-wrap:wrap }
+  .controls button{ padding:10px 12px; font-size:14px }
+  .title{ font-size:16px }
 }
 
-.pile, .foundation, #stock, #waste {
-	width: 80px;
-	height: 120px;
-	border-radius: 8px;
-	background: rgba(255,255,255,0.03);
-	border: 1px solid rgba(255,255,255,0.04);
-	box-shadow: inset 0 1px 0 rgba(255,255,255,0.02);
-	display: flex;
-	align-items: flex-start;
-	justify-content: center;
+/* Extra small phones: further reduce card size so 7 columns fit without internal scrolling */
+@media (max-width: 360px){
+  :root{ --card-w: 48px; --card-h: 72px; --col-gap:6px; --board-padding:10px }
+  #board{ padding:10px }
+  .title{ font-size:15px }
+  .controls button{ padding:8px 10px }
 }
 
-.column {
-	position: relative;
-	width: 80px;
-	min-height: 220px;
-	border-radius: 8px;
-	background: transparent;
-}
-
-.card {
-	width: 80px;
-	height: 120px;
-	position: absolute;
-	cursor: pointer;
-	user-select: none;
-	border-radius: 8px;
-	box-shadow: 0 10px 24px rgba(2,6,23,0.35);
-	transition: transform 150ms ease, box-shadow 150ms ease;
-}
-
-.card.selected {
-	transform: translateY(-6px) scale(1.02);
-	box-shadow: 0 16px 36px rgba(2,6,23,0.45);
-}
-
-.foundation, #stock, #waste { display: flex; align-items: flex-start; justify-content: center; }
-
-.message {
-	position: fixed;
-	left: 50%;
-	top: 20px;
-	transform: translateX(-50%);
-	background: #114b33;
-	color: white;
-	padding: 10px 16px;
-	border-radius: 8px;
-	font-weight: 700;
-	z-index: 9999;
-}
-
-.hidden { display: none; }
-body {
-	background: #eef2f3;
-	font-family: Inter, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
-	margin: 0;
-	padding: 28px;
-	color: #1f2933;
-	display: flex;
-	flex-direction: column;
-	align-items: center;
-	justify-content: center;
-	min-height: 100vh;
-	box-sizing: border-box;
-}
-
-.title {
-	text-align: center;
-	margin-bottom: 18px;
-	font-weight: 700;
-	color: #114b33;
-}
-
-#board {
-	width: 960px;
-	margin: 0 auto;
-	background: linear-gradient(180deg, #304444 0%, #263839 100%);
-	padding: 18px 22px;
-	border-radius: 12px;
-	body {
-		background: #eef2f3;
-		font-family: Inter, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
-		margin: 0;
-		padding: 28px;
-		color: #1f2933;
-	}
-
-	.title {
-		text-align: center;
-		margin-bottom: 18px;
-		font-weight: 700;
-		color: #114b33;
-	}
-
-	#board {
-		width: min(1400px, 96vw);
-		max-width: 1400px;
-		height: min(82vh, 820px);
-		margin: 0 auto;
-		background: linear-gradient(180deg, #304444 0%, #263839 100%);
-		padding: 28px 32px;
-		border-radius: 12px;
-		box-shadow: 0 18px 40px rgba(16,40,34,0.14);
-		box-sizing: border-box;
-	}
-
-	.controls {
-		display: flex;
-		align-items: center;
-		gap: 12px;
-		margin-bottom: 12px;
-	}
-
-	.controls button {
-		background: #ffffff;
-		body {
-			background: #eef2f3;
-			font-family: Inter, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
-			margin: 0;
-			padding: 28px;
-			color: #1f2933;
-			display: flex;
-			flex-direction: column;
-			align-items: center;
-			justify-content: center;
-			min-height: 100vh;
-			box-sizing: border-box;
-		}
-
-		.title {
-			text-align: center;
-			margin-bottom: 18px;
-			font-weight: 700;
-			color: #114b33;
-		}
-
-		#board {
-			width: min(1400px, 96vw);
-			max-width: 1400px;
-			height: min(82vh, 820px);
-			margin: 0 auto;
-			background: linear-gradient(180deg, #304444 0%, #263839 100%);
-			padding: 28px 32px;
-			border-radius: 12px;
-			box-shadow: 0 18px 40px rgba(16,40,34,0.14);
-			box-sizing: border-box;
-		}
-
-		.controls {
-			display: flex;
-			align-items: center;
-			gap: 12px;
-			margin-bottom: 12px;
-		}
-
-		.controls button {
-			background: #ffffff;
-			color: #114b33;
-			border: 1px solid rgba(0,0,0,0.06);
-			padding: 6px 12px;
-			border-radius: 6px;
-			cursor: pointer;
-			font-weight: 600;
-		}
-
-		.controls .hint {
-			font-size: 12px;
-			color: rgba(255,255,255,0.9);
-		}
-
-		.spacer { flex: 1 1 0%; }
-
-		.top-row {
-			display: flex;
-			gap: 18px;
-			margin-bottom: 26px;
-			align-items: flex-start;
-			justify-content: space-between;
-		}
-
-		#foundations {
-			display: flex;
-			gap: 14px;
-		}
-
-		#tableau {
-			display: flex;
-			gap: 14px;
-		}
-
-		.pile, .foundation, #stock, #waste {
-			width: 80px;
-			height: 120px;
-			border-radius: 8px;
-			background: rgba(255,255,255,0.03);
-			border: 1px solid rgba(255,255,255,0.04);
-			box-shadow: inset 0 1px 0 rgba(255,255,255,0.02);
-			display: flex;
-			align-items: flex-start;
-			justify-content: center;
-		}
-
-		.column {
-			position: relative;
-			width: 80px;
-			min-height: 220px;
-			border-radius: 8px;
-			background: transparent;
-		}
-
-		.card {
-			width: 80px;
-			height: 120px;
-			position: absolute;
-			cursor: pointer;
-			user-select: none;
-			border-radius: 8px;
-			box-shadow: 0 10px 24px rgba(2,6,23,0.35);
-			transition: transform 150ms ease, box-shadow 150ms ease;
-		}
-
-		.card.selected {
-			transform: translateY(-6px) scale(1.02);
-			box-shadow: 0 16px 36px rgba(2,6,23,0.45);
-		}
-
-		.foundation, #stock, #waste { display: flex; align-items: flex-start; justify-content: center; }
-
-		.message {
-			position: fixed;
-			left: 50%;
-			top: 20px;
-			transform: translateX(-50%);
-			background: #114b33;
-			color: white;
-			padding: 10px 16px;
-			border-radius: 8px;
-			font-weight: 700;
-			z-index: 9999;
-		}
-
-		.hidden { display: none; }
+/* (Removed horizontal-scroll tweaks to avoid inner scrollbars on desktop) */
