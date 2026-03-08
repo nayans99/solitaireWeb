@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+<meta charset="UTF-8">
+<title>Minimal Solitaire</title>
+<link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+<h1 class="title">Solitaire</h1>
+
+<div id="board">
+
+	<div class="controls">
+		<button id="newGame">New Game</button>
+		<div class="spacer"></div>
+		<div class="hint">Click stock to draw. Click card to select and click destination to move.</div>
+	</div>
+
+	<div class="top-row">
+
+		<div id="stock" class="pile" title="Stock"></div>
+		<div id="waste" class="pile" title="Waste"></div>
+
+		<div class="spacer"></div>
+
+		<div id="foundations">
+			<div class="pile foundation" data-foundation="0"></div>
+			<div class="pile foundation" data-foundation="1"></div>
+			<div class="pile foundation" data-foundation="2"></div>
+			<div class="pile foundation" data-foundation="3"></div>
+		</div>
+
+	</div>
+
+	<div id="tableau"></div>
+
+</div>
+
+<div id="message" class="message hidden"></div>
+
+<script src="script.js"></script>
+
+</body>
+</html>
